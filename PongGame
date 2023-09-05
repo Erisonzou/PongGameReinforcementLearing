@@ -1,0 +1,135 @@
+import pygame, sys, random
+from enum import Enum
+
+pygame.init()
+
+
+class Direction(Enum):
+    Right = 2
+    Left = 1
+
+
+Window = pygame.display.set_mode((1000,600))
+pygame.display.set_caption('PONG GAME')
+
+class Paddle:
+    def __init__(self, paddleWidth,paddleLength,color,ScreenHeight,ScreenWidth,decision, screen):
+        
+        self.ScreenWidth = ScreenWidth
+        self.ScreenHeight = ScreenHeight
+        self.width = paddleWidth
+        self.length = paddleLength
+        self.color = color
+        self.left_paddle = ScreenHeight/2 - paddleLength/2
+        self.right_paddle = ScreenHeight/2 + paddleLength/2
+        self.y = ScreenHeight/2 - self.length/2
+        self.Velocity = 0
+
+        if decision == 'Left':
+            self.x = 100 - self.width/2
+        else:
+            self.x = self.ScreenWidth - (100 - self.width/2)
+        
+        self.paddle = pygame.draw.rect(screen, self.color,pygame.Rect(self.x, self.y, self.width, self.length))
+    
+    def draw_paddle(self,screen):
+        self.paddle = pygame.draw.rect(screen, self.color,pygame.Rect(self.x, self.y, self.width, self.length))
+    
+    def Move(self, direction):
+
+        if direction == Direction.Right:
+            self.Velocity = 3
+        elif direction == Direction.Left:
+            self.Velocity = -3
+
+        self.y += self.Velocity
+        self.left_paddle += self.Velocity
+        self.right_paddle += self.Velocity
+
+        if self.left_paddle <= 0:
+            self.Velocity = 0
+        
+        if self.right_paddle >= self.ScreenHeight:
+            self.Velocity = 0
+    
+    def getRect(self):
+        return self.paddle
+
+class Ball:
+
+    BLUE = (0, 0, 255)
+    WHITE = (255, 255, 255)
+    
+    def __init__(self,ScreenWidth, ScreenHeight, radius, screen):
+        self.ScreenHeight = ScreenHeight
+        self.ScreenWidth = ScreenWidth
+        self.x_pos = ScreenWidth/2 - radius
+        self.y_pos = ScreenHeight/2 - radius
+        self.radius = radius
+        self.Velx = 3 * random.choice((-1,1))
+        self.Vely = 3 * random.choice((-1,1))
+        self.ball = pygame.draw.circle(screen, self.BLUE ,(self.x_pos, self.y_pos),self.radius)
+        self.firstTime = 1
+    
+    def update(self):
+        self.x_pos += self.Velx 
+        self.y_pos += self.Vely
+        
+        if self.y_pos + self.radius >= 0:
+            self.Vely *= -1
+        
+        if self.y_pos - self.radius <= self.ScreenHeight:
+            self.Vely *= -1
+        
+        if self.x_pos <= 0 and self.firstTime:
+            self.firstTime = 0
+            return 1
+        elif self.x_pos >= self.ScreenWidth and self.firstTime:
+            self.firstTime = 0
+            return -1
+        else:
+            return 0
+    
+    def hit(self):
+        self.Velx *= -1
+        self.Vely *= -1
+    
+    def getRect(self):
+        return self.ball
+    
+    def reset(self):
+        self.x_pos = self.ScreenWidth/2 - self.radius
+        self.y_pos = self.ScreenHeight/2 - self.radius
+        self.Velx = 3 * random.randint(-1,1)
+        self.Vely = 3 * random.choice((-1,1))
+        self.firstTime = 1
+    
+class PongGameAi:
+
+    WHITE = (255, 255, 255)
+    RED = (200,0,0)
+    BLUE1 = (0, 0, 255)
+    BLACK = (0,0,0)
+
+    font20 = pygame.font.Font('freesansbold.ttf', 20)
+
+    def __init__(self, Width, Height, Window):
+        self.Width = Width
+        self.Height = Height
+        self.Window = Window
+        self.LeftPaddleAI = Paddle(20, 120, (130,0,0), self.Width, self.Height,'Left',self.Window)
+        self.RightPaddleAI = Paddle(20, 120, (130,0,0), self.Width, self.Height,'Right',self.Window)
+        self.ball = Ball(self.Width ,self.Height,15, Window)
+
+        self.LeftPaddleScore = 0
+        self.RightPaddleScore = 0
+        self.LeftPaddleHits = 0
+        self.RightPaddleHits= 0
+
+        self.clock = pygame.time.Clock()
+        self.reset()
+    
+
+    
+
+        
